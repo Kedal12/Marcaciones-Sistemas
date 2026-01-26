@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ICG Sistemas - Control de Presencia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://api.fontshare.com/v2/css?f[]=clash-display@400,500,600,700&f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'icg': { 500: '#0ca4eb', 600: '#0083c9', 700: '#0168a3' }
+                    },
+                    fontFamily: {
+                        'display': ['Clash Display', 'system-ui'],
+                        'body': ['Satoshi', 'system-ui'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        .bg-grid { background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px); background-size: 50px 50px; }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .animate-slide-up { animation: slideUp 0.5s ease-out forwards; }
+    </style>
+</head>
+<body class="bg-slate-950" id="root"></body>
+<script>
+const usuarios = [
+    { id: 1, nombre: "Kevin Sistemas", email: "kevin@icg.com", telefono: "300-111-1111", cargo: "Desarrollador", estado: "Activo", color: "#22C55E", tiempo: "2h 15m" },
+    { id: 2, nombre: "Juan Soporte", email: "soporte1@icg.com", telefono: "300-222-2222", cargo: "Soporte Técnico", estado: "En reunión", color: "#8B5CF6", tiempo: "45m" },
+    { id: 3, nombre: "María Soporte", email: "soporte2@icg.com", telefono: "300-333-3333", cargo: "Soporte Técnico", estado: "Activo", color: "#22C55E", tiempo: "1h 30m" },
+    { id: 4, nombre: "Carlos Admin", email: "admin@icg.com", telefono: "300-444-4444", cargo: "Administrador", estado: "Almuerzo", color: "#06B6D4", tiempo: "3h 45m" }
+];
+const estados = [
+    { nombre: "Activo", color: "#22C55E" },
+    { nombre: "Ausente", color: "#F59E0B" },
+    { nombre: "Ocupado", color: "#EF4444" },
+    { nombre: "En reunión", color: "#8B5CF6" },
+    { nombre: "Almuerzo", color: "#06B6D4" }
+];
+
+let view = 'login', connected = false, estado = estados[0], showMenu = false;
+
+function render() {
+    document.getElementById('root').innerHTML = view === 'login' ? loginView() : dashboardView();
+    lucide.createIcons();
+}
+
+function loginView() {
+    return `
+    <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative overflow-hidden">
+        <div class="absolute inset-0 bg-grid opacity-20"></div>
+        <div class="absolute top-1/4 -left-32 w-96 h-96 bg-icg-500/10 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-1/4 -right-32 w-96 h-96 bg-icg-600/10 rounded-full blur-3xl"></div>
+        
+        <div class="relative z-10 w-full max-w-md px-6">
+            <div class="text-center mb-8 animate-slide-up">
+                <div class="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-icg-500 to-icg-700 shadow-2xl shadow-icg-500/25 mb-6">
+                    <i data-lucide="cpu" class="w-10 h-10 text-white"></i>
+                </div>
+                <h1 class="font-display text-3xl font-bold text-white">ICG Sistemas</h1>
+                <p class="font-body text-slate-400 mt-2">Control de Presencia</p>
+            </div>
+
+            <div class="backdrop-blur-xl bg-white/5 rounded-3xl border border-white/10 p-8 shadow-2xl animate-slide-up" style="animation-delay:.1s">
+                <h2 class="font-display text-xl font-semibold text-white mb-1">Iniciar Sesión</h2>
+                <p class="font-body text-sm text-slate-400 mb-6">Ingresa tus credenciales</p>
+
+                <div class="space-y-5">
+                    <div class="relative">
+                        <i data-lucide="user" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500"></i>
+                        <input type="text" value="kevin" class="w-full pl-12 pr-4 py-3.5 bg-slate-900/50 border border-slate-700/50 rounded-xl text-white focus:ring-2 focus:ring-icg-500/50 focus:border-icg-500/50 font-body" placeholder="Usuario">
+                    </div>
+                    <div class="relative">
+                        <i data-lucide="lock" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500"></i>
+                        <input type="password" value="admin123" class="w-full pl-12 pr-4 py-3.5 bg-slate-900/50 border border-slate-700/50 rounded-xl text-white focus:ring-2 focus:ring-icg-500/50 focus:border-icg-500/50 font-body" placeholder="Contraseña">
+                    </div>
+                    <button onclick="view='dashboard';render()" class="w-full py-4 bg-gradient-to-r from-icg-500 to-icg-600 hover:from-icg-400 hover:to-icg-500 text-white font-body font-semibold rounded-xl shadow-lg shadow-icg-500/25 flex items-center justify-center gap-2">
+                        <i data-lucide="log-in" class="w-5 h-5"></i> Ingresar
+                    </button>
+                </div>
+            </div>
+            <p class="text-center text-slate-500 text-sm mt-8 font-body">Sistema exclusivo para Sistemas ICG</p>
+        </div>
+    </div>`;
+}
+
+function dashboardView() {
+    return `
+    <div class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative">
+        <div class="absolute inset-0 bg-grid opacity-10"></div>
+        
+        <header class="relative z-10 border-b border-white/5 backdrop-blur-xl bg-slate-900/50">
+            <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-icg-500 to-icg-700 shadow-lg flex items-center justify-center">
+                        <i data-lucide="cpu" class="w-6 h-6 text-white"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-display text-xl font-bold text-white">ICG Sistemas</h1>
+                        <p class="font-body text-sm text-slate-400">Control de Presencia</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="text-right hidden sm:block">
+                        <p class="font-body text-sm font-medium text-white">Kevin Sistemas</p>
+                        <p class="font-body text-xs text-slate-400">Desarrollador</p>
+                    </div>
+                    <button onclick="view='login';connected=false;render()" class="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800/50 border border-slate-700/50 text-slate-300 hover:text-white hover:bg-slate-700/50 font-body text-sm">
+                        <i data-lucide="log-out" class="w-4 h-4"></i> <span class="hidden sm:inline">Salir</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main class="relative z-10 max-w-7xl mx-auto px-6 py-8">
+            <div class="grid lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-1 space-y-6">
+                    <div class="backdrop-blur-xl bg-white/5 rounded-2xl border border-white/10 p-6 animate-slide-up">
+                        <h2 class="font-display text-lg font-semibold text-white mb-6">Mi Estado</h2>
+                        
+                        <div class="flex items-center gap-4 mb-6 p-4 rounded-xl bg-slate-800/30 border border-slate-700/30">
+                            <div class="w-14 h-14 rounded-full flex items-center justify-center" style="background:${connected ? estado.color+'20' : '#6B728020'}; ${connected ? 'box-shadow:0 0 20px '+estado.color+'30' : ''}">
+                                <i data-lucide="${connected ? 'check-circle' : 'x-circle'}" class="w-7 h-7" style="color:${connected ? estado.color : '#6B7280'}"></i>
+                            </div>
+                            <div>
+                                <p class="font-body text-sm text-slate-400">Estado actual</p>
+                                <p class="font-display text-xl font-semibold" style="color:${connected ? estado.color : '#6B7280'}">${connected ? estado.nombre : 'Desconectado'}</p>
+                            </div>
+                        </div>
+
+                        ${!connected ? `
+                        <button onclick="connected=true;render()" class="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-body font-semibold rounded-xl shadow-lg shadow-green-500/25 flex items-center justify-center gap-3">
+                            <i data-lucide="power" class="w-5 h-5"></i> Conectarse
+                        </button>
+                        ` : `
+                        <div class="space-y-3">
+                            <div class="relative">
+                                <button onclick="showMenu=!showMenu;render()" class="w-full py-3 px-4 bg-slate-800/50 border border-slate-700/50 rounded-xl text-white font-body flex items-center justify-between hover:bg-slate-700/50">
+                                    <span class="flex items-center gap-3">
+                                        <div class="w-3 h-3 rounded-full" style="background:${estado.color}"></div> Cambiar estado
+                                    </span>
+                                    <i data-lucide="chevron-down" class="w-5 h-5 transition-transform ${showMenu ? 'rotate-180' : ''}"></i>
+                                </button>
+                                ${showMenu ? `
+                                <div class="absolute top-full left-0 right-0 mt-2 py-2 bg-slate-800 border border-slate-700/50 rounded-xl shadow-xl z-20">
+                                    ${estados.map(e => `
+                                        <button onclick="estado=estados.find(x=>x.nombre==='${e.nombre}');showMenu=false;render()" class="w-full px-4 py-3 flex items-center gap-3 hover:bg-slate-700/50 text-left">
+                                            <i data-lucide="check-circle" class="w-5 h-5" style="color:${e.color}"></i>
+                                            <span class="font-body text-white">${e.nombre}</span>
+                                        </button>
+                                    `).join('')}
+                                </div>` : ''}
+                            </div>
+                            <button onclick="connected=false;render()" class="w-full py-4 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-400 hover:to-rose-500 text-white font-body font-semibold rounded-xl shadow-lg shadow-red-500/25 flex items-center justify-center gap-3">
+                                <i data-lucide="power-off" class="w-5 h-5"></i> Desconectarse
+                            </button>
+                        </div>
+                        `}
+                    </div>
+
+                    <div class="backdrop-blur-xl bg-white/5 rounded-2xl border border-white/10 p-6 animate-slide-up" style="animation-delay:.1s">
+                        <h2 class="font-display text-lg font-semibold text-white mb-4">Mi Información</h2>
+                        <div class="space-y-4 text-slate-300">
+                            <div class="flex items-center gap-3"><i data-lucide="mail" class="w-5 h-5 text-slate-500"></i><span class="font-body text-sm">kevin@icg.com</span></div>
+                            <div class="flex items-center gap-3"><i data-lucide="phone" class="w-5 h-5 text-slate-500"></i><span class="font-body text-sm">300-111-1111</span></div>
+                            <div class="flex items-center gap-3"><i data-lucide="monitor" class="w-5 h-5 text-slate-500"></i><span class="font-body text-sm">Sistemas</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-2">
+                    <div class="backdrop-blur-xl bg-white/5 rounded-2xl border border-white/10 p-6 animate-slide-up" style="animation-delay:.2s">
+                        <div class="flex items-center justify-between mb-6">
+                            <div>
+                                <h2 class="font-display text-lg font-semibold text-white">Equipo Conectado</h2>
+                                <p class="font-body text-sm text-slate-400 mt-1">${usuarios.length} personas en línea</p>
+                            </div>
+                            <button class="p-2 rounded-lg bg-slate-800/50 border border-slate-700/50 text-slate-400 hover:text-white hover:bg-slate-700/50">
+                                <i data-lucide="refresh-cw" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            ${usuarios.map((u, i) => `
+                            <div class="group p-4 rounded-xl bg-slate-800/30 border border-slate-700/30 hover:bg-slate-800/50 hover:border-slate-600/50 transition-all animate-slide-up" style="animation-delay:${i*0.05}s">
+                                <div class="flex items-start gap-4">
+                                    <div class="relative flex-shrink-0">
+                                        <div class="w-14 h-14 rounded-full bg-gradient-to-br from-icg-500/20 to-icg-700/20 flex items-center justify-center border-2 border-slate-600/50">
+                                            <i data-lucide="user-circle" class="w-8 h-8 text-slate-400"></i>
+                                        </div>
+                                        <div class="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full border-2 border-slate-900 flex items-center justify-center" style="background:${u.color}">
+                                            <i data-lucide="check-circle" class="w-3 h-3 text-white"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-start justify-between gap-2">
+                                            <div>
+                                                <h3 class="font-display text-base font-semibold text-white truncate">${u.nombre}</h3>
+                                                <p class="font-body text-sm text-slate-400">${u.cargo}</p>
+                                            </div>
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-body font-medium" style="background:${u.color}20;color:${u.color}">
+                                                <span class="w-1.5 h-1.5 rounded-full animate-pulse" style="background:${u.color}"></span> ${u.estado}
+                                            </span>
+                                        </div>
+                                        <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-400">
+                                            <div class="flex items-center gap-1.5"><i data-lucide="mail" class="w-4 h-4"></i><span class="font-body">${u.email}</span></div>
+                                            <div class="flex items-center gap-1.5"><i data-lucide="phone" class="w-4 h-4"></i><span class="font-body">${u.telefono}</span></div>
+                                        </div>
+                                        <div class="mt-2 flex items-center gap-1.5 text-xs text-slate-500">
+                                            <i data-lucide="clock" class="w-3.5 h-3.5"></i><span class="font-body">Conectado hace ${u.tiempo}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>`;
+}
+
+render();
+</script>
+</html>
