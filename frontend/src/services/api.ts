@@ -9,9 +9,14 @@ const API_BASE_URL = 'http://10.15.0.221:5000/api';
 
 class ApiService {
   private token: string | null = null;
+  private onTokenExpired: (() => void) | null = null;
 
   setToken(token: string | null) {
     this.token = token;
+  }
+
+  setOnTokenExpired(callback: () => void) {
+    this.onTokenExpired = callback;
   }
 
   private async request<T>(
@@ -27,17 +32,34 @@ class ApiService {
       (headers as Record<string, string>)['Authorization'] = `Bearer ${this.token}`;
     }
 
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      ...options,
-      headers,
-    });
+    try {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        ...options,
+        headers,
+      });
 
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Error de red' }));
-      throw new Error(error.message || 'Error en la solicitud');
+      // Si el token expiró, forzar logout
+      if (response.status === 401) {
+        console.warn('Token expirado, cerrando sesión...');
+        if (this.onTokenExpired) {
+          this.onTokenExpired();
+        }
+        throw new Error('Sesión expirada. Por favor inicia sesión nuevamente.');
+      }
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: 'Error de red' }));
+        throw new Error(error.message || 'Error en la solicitud');
+      }
+
+      return response.json();
+    } catch (error: any) {
+      // Error de red (servidor caído, sin conexión, etc.)
+      if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+        throw new Error('No se pudo conectar con el servidor. Verifica tu conexión.');
+      }
+      throw error;
     }
-
-    return response.json();
   }
 
   async login(username: string, password: string): Promise<LoginResponse> {
